@@ -1,0 +1,1 @@
+### Repozytorium kodu z przedmiotu Algorytmy Macierzowe
