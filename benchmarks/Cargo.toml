@@ -1,0 +1,10 @@
+[package]
+name = "benchmarks"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+z1 = { path = "../z1" }
+z2 = { path = "../z2" }
+z3 = { path = "../z3" }
+z4 = { path = "../z4" }

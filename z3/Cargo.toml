@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+z1 = { path = "../z1" }
+z2 = { path = "../z2" }

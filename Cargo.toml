@@ -1,7 +1,15 @@
 [workspace]
-members = [
+members = ["benchmarks",
     "z1",
     "z2",
     "z3",
     "z4",
+    "benchmarks",
 ]
+
+[workspace.dependencies]
+ndarray = "0.17.2"
+criterion = "0.8.2"
+ndarray-rand = "0.16.0"
+rand = "0.10.3"
+rand_chacha = "0.10.0"
