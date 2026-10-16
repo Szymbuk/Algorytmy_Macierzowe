@@ -1,3 +1,7 @@
+mod lib;
+
+
 fn main() {
-    println!("Hello, world!");
+
+    lib::main1();
 }
