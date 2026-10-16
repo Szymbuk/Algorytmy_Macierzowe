@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "assert_float_eq"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd9777fd8234cccd34019d9e26d70c8247f9baf24c8fdc0b56c548cf943af2ed"
+
+[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -231,6 +237,7 @@ checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 name = "z1"
 version = "0.1.0"
 dependencies = [
+ "assert_float_eq",
  "ndarray",
  "ndarray-rand",
 ]
