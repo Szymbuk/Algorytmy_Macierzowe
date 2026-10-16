@@ -1,7 +1,7 @@
-mod lib;
+use z1::main1;
 
 
 fn main() {
 
-    lib::main1();
+    main1();
 }
