@@ -23,6 +23,69 @@ pub fn generate_nxn_matrix(n: usize) -> Array<f64, ndarray::Dim<[usize; 2]>> {
     matrix
 }
 
+trait OperationCounter {
+    fn increment_additions(&mut self, n: usize);
+    fn increment_multiplications(&mut self, n: usize);
+    fn increment_subtractions(&mut self, n: usize);
+    fn increment_divisions(&mut self, n: usize);
+    fn get_count(&self) -> (usize,usize,usize,usize);
+}
+
+struct EmptyCounter {}
+
+impl OperationCounter for EmptyCounter {
+    #[inline(always)]
+    fn increment_additions(&mut self, _n: usize) {}
+
+    #[inline(always)]
+    fn increment_multiplications(&mut self, _n: usize) {}
+
+    #[inline(always)]
+    fn increment_subtractions(&mut self, _n: usize) {}
+
+    #[inline(always)]
+    fn increment_divisions(&mut self, _n: usize) {}
+
+    #[inline(always)] 
+    fn get_count(&self) -> (usize,usize,usize,usize) {
+        (0,0,0,0)
+    } 
+}
+
+struct Counter {
+    count_additions: usize,
+    count_multiplication: usize,
+    count_subtraction: usize,
+    count_division: usize,
+}
+
+impl OperationCounter for Counter {
+    #[inline(always)]
+    fn increment_additions(&mut self, n: usize) {
+        self.count_additions += n;
+    }
+
+    #[inline(always)]
+    fn increment_multiplications(&mut self, n: usize) {
+        self.count_multiplication += n;
+    }
+
+    #[inline(always)]
+    fn increment_subtractions(&mut self, n: usize) {
+        self.count_subtraction += n;
+    }
+
+    #[inline(always)]
+    fn increment_divisions(&mut self, n: usize) {
+        self.count_division += n;
+    }
+
+    #[inline(always)]
+    fn get_count(&self) -> (usize,usize,usize,usize) {
+        (self.count_additions, self.count_multiplication, self.count_subtraction, self.count_division)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
