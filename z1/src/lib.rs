@@ -2,6 +2,7 @@ use ndarray::Array2;
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
 pub mod multiplication_algorithms;
+pub mod csv_io;
 pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication};
 
 

@@ -14,3 +14,6 @@ ndarray-rand = "0.16.0"
 rand = "0.10.3"
 rand_chacha = "0.10.0"
 assert_float_eq = "1.2.0"
+csv = "1.4.0"
+ndarray-csv = "0.5.4"
+serde = { version = "1.0.229", features = ["derive"] }
