@@ -2,20 +2,7 @@ use ndarray::Array2;
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
 pub mod multiplication_algorithms;
-use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication};
-
-
-pub fn main1(){
-    let m = generate_nxn_matrix(4);
-    let m2 = generate_nxn_matrix(4);
-
-    let res = binet_multiplication(&m, &m2);
-    let res2 = strassen_multiplication(&m, &m2);
-
-    println!("{:?}", res);
-    print!("\n");
-    println!("{:?}", res2);
-}
+pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication};
 
 
 
@@ -24,17 +11,21 @@ pub fn generate_nxn_matrix(n: usize) -> Array2<f64> {
     matrix
 }
 
-trait OperationCounter {
+pub trait OperationCounter {
+    fn new() -> Self;
     fn increment_additions(&mut self, n: usize);
     fn increment_multiplications(&mut self, n: usize);
-    fn increment_subtractions(&mut self, n: usize);
     fn increment_divisions(&mut self, n: usize);
-    fn get_count(&self) -> (usize,usize,usize,usize);
+    fn get_count(&self) -> (usize,usize,usize);
 }
 
-struct EmptyCounter {}
+pub struct EmptyCounter {}
 
 impl OperationCounter for EmptyCounter {
+    fn new() -> Self {
+        EmptyCounter {}
+    }
+
     #[inline(always)]
     fn increment_additions(&mut self, _n: usize) {}
 
@@ -42,25 +33,26 @@ impl OperationCounter for EmptyCounter {
     fn increment_multiplications(&mut self, _n: usize) {}
 
     #[inline(always)]
-    fn increment_subtractions(&mut self, _n: usize) {}
-
-    #[inline(always)]
     fn increment_divisions(&mut self, _n: usize) {}
 
     #[inline(always)] 
-    fn get_count(&self) -> (usize,usize,usize,usize) {
-        (0,0,0,0)
+    fn get_count(&self) -> (usize,usize,usize) {
+        (0,0,0)
     } 
 }
 
-struct Counter {
+pub struct Counter {
     count_additions: usize,
     count_multiplication: usize,
-    count_subtraction: usize,
     count_division: usize,
 }
 
 impl OperationCounter for Counter {
+    fn new() -> Self {
+        Counter { count_additions: 0, count_multiplication: 0, count_division: 0 }
+    }
+
+
     #[inline(always)]
     fn increment_additions(&mut self, n: usize) {
         self.count_additions += n;
@@ -72,18 +64,13 @@ impl OperationCounter for Counter {
     }
 
     #[inline(always)]
-    fn increment_subtractions(&mut self, n: usize) {
-        self.count_subtraction += n;
-    }
-
-    #[inline(always)]
     fn increment_divisions(&mut self, n: usize) {
         self.count_division += n;
     }
 
     #[inline(always)]
-    fn get_count(&self) -> (usize,usize,usize,usize) {
-        (self.count_additions, self.count_multiplication, self.count_subtraction, self.count_division)
+    fn get_count(&self) -> (usize,usize,usize) {
+        (self.count_additions, self.count_multiplication, self.count_division)
     }
 }
 
