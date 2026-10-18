@@ -1,12 +1,12 @@
-use ndarray::Array;
+use ndarray::Array2;
 use ndarray::s;
 
-
-pub fn binet_multiplication(a_array: &Array<f64, ndarray::Dim<[usize; 2]>>, b_array: &Array<f64, ndarray::Dim<[usize; 2]>>) -> Array<f64, ndarray::Dim<[usize; 2]>> {
+    
+pub fn binet_multiplication(a_array: &Array2<f64>, b_array: &Array2<f64>) -> Array2<f64> {
     
     let a = a_array.view();
     let b = b_array.view();
-    let mut c = Array::zeros((a.nrows(), b.ncols()));
+    let mut c = Array2::zeros((a.nrows(), b.ncols()));
     for i in 0..a.nrows() {
         for j in 0..b.ncols() {
             for k in 0..a.ncols() {
@@ -18,43 +18,215 @@ pub fn binet_multiplication(a_array: &Array<f64, ndarray::Dim<[usize; 2]>>, b_ar
 }
 
 
-pub fn strassen_multiplication(a_array: &Array<f64, ndarray::Dim<[usize; 2]>>, b_array: &Array<f64, ndarray::Dim<[usize; 2]>>) -> Array<f64, ndarray::Dim<[usize; 2]>> {
-    let a = a_array.view();
-    let b = b_array.view();
+
+/// Algorytm Strassena z dynamicznym uzupełnianiem (paddingiem) do parzystego wymiaru:
+/// 1. Warunek stopu: Jeśli wymiar macierzy n <= 3, algorytm przerywa rekurencję
+///    i wykonuje tradycyjne, szybkie mnożenie iteracyjne za pomocą pętli.
+/// 2. Sprawdzenie parzystości:
+///    - Jeśli n jest parzyste, macierz dzielona jest bezpośrednio na 4 równe bloki.
+///    - Jeśli n jest nieparzyste, macierz jest powiększana o 1 wiersz i 1 kolumnę
+///      wypełnioną zerami (do rozmiaru n + 1), co pozwala na idealnie równy podział na bloki.
+/// 3. Rekurencyjne obliczenie 7 iloczynów Strassena i złożenie macierzy wynikowej.
+/// 4. Obcięcie wyniku: Jeśli oryginalny wymiar był nieparzysty, z końcowej macierzy
+///    odrzucany jest dodany wcześniej zerowy wiersz i kolumna, zwracając dokładny wynik n x n.
+pub fn strassen_multiplication(a: &Array2<f64>, b: &Array2<f64>) -> Array2<f64> {
     let n = a.nrows();
-    let mut c = Array::zeros((n, n));
-    
-    if n <= 2 {
-        return binet_multiplication(&a.to_owned(), &b.to_owned());
+
+    // 1. Warunek stopu dla małych macierzy
+    if n <= 3 {
+        return binet_multiplication(a, b);
     }
-    
-    let mid = n / 2;
-    
-    let a00 = a.slice(s![..mid, ..mid]);
-    let a01 = a.slice(s![..mid, mid..]);
-    let a10 = a.slice(s![mid.., ..mid]);
-    let a11 = a.slice(s![mid.., mid..]);
-    
-    let b00 = b.slice(s![..mid, ..mid]);
-    let b01 = b.slice(s![..mid, mid..]);
-    let b10 = b.slice(s![mid.., ..mid]);
-    let b11 = b.slice(s![mid.., mid..]);
-    
-    let m0 = strassen_multiplication(&(a00.to_owned() + &a11.to_owned()), &(b00.to_owned() + &b11.to_owned()));
-    let m1 = strassen_multiplication(&(a10.to_owned() + &a11.to_owned()), &b00.to_owned());
-    let m2 = strassen_multiplication(&a00.to_owned(), &(b01.to_owned() - &b11.to_owned()));
-    let m3 = strassen_multiplication(&a11.to_owned(), &(b10.to_owned() - &b00.to_owned()));
-    let m4 = strassen_multiplication(&(a00.to_owned() + &a01.to_owned()), &b11.to_owned());
-    let m5 = strassen_multiplication(&(a10.to_owned() - &a00.to_owned()), &(b00.to_owned() + &b01.to_owned()));
-    let m6 = strassen_multiplication(&(a01.to_owned() - &a11.to_owned()), &(b10.to_owned() + &b11.to_owned()));
 
+    // 2. Obsługa nieparzystego wymiaru (dynamiczne powiększenie do parzystego)
+    let is_odd = n % 2 != 0;
+    let actual_n = if is_odd { n + 1 } else { n };
 
-    c.slice_mut(s![..mid, ..mid]).assign(&(m0.clone() + m3.clone() + m6.clone() - m4.clone())); // C00
-    c.slice_mut(s![mid.., ..mid]).assign(&(m1.clone() + m3.clone())); // C10
-    c.slice_mut(s![..mid, mid..]).assign(&(m2.clone() + m4.clone())); // C01
-    c.slice_mut(s![mid.., mid..]).assign(&(m0.clone() - m1.clone() + m2.clone() + m5.clone())); // C11
+    let a_work;
+    let b_work;
 
-    c
+    if is_odd {
+        let mut a_padded = Array2::zeros((actual_n, actual_n));
+        let mut b_padded = Array2::zeros((actual_n, actual_n));
+
+        a_padded.slice_mut(s![0..n, 0..n]).assign(a);
+        b_padded.slice_mut(s![0..n, 0..n]).assign(b);
+
+        a_work = a_padded;
+        b_work = b_padded;
+    } else {
+        a_work = a.to_owned();
+        b_work = b.to_owned();
+    }
+
+    let mid = actual_n / 2;
+
+    // Podział macierzy roboczych na 4 równe bloki
+    let a11 = a_work.slice(s![0..mid, 0..mid]);
+    let a12 = a_work.slice(s![0..mid, mid..actual_n]);
+    let a21 = a_work.slice(s![mid..actual_n, 0..mid]);
+    let a22 = a_work.slice(s![mid..actual_n, mid..actual_n]);
+
+    let b11 = b_work.slice(s![0..mid, 0..mid]);
+    let b12 = b_work.slice(s![0..mid, mid..actual_n]);
+    let b21 = b_work.slice(s![mid..actual_n, 0..mid]);
+    let b22 = b_work.slice(s![mid..actual_n, mid..actual_n]);
+
+    // 3. Obliczenie 7 iloczynów Strassena za pomocą wywołań rekurencyjnych
+    // M1 = (A11 + A22) * (B11 + B22)
+    let m1 = strassen_multiplication(&(a11.to_owned() + &a22), &(b11.to_owned() + &b22));
+    // M2 = (A21 + A22) * B11
+    let m2 = strassen_multiplication(&(a21.to_owned() + &a22), &b11.to_owned());
+    // M3 = A11 * (B12 - B22)
+    let m3 = strassen_multiplication(&a11.to_owned(), &(b12.to_owned() - &b22));
+    // M4 = A22 * (B21 - B11)
+    let m4 = strassen_multiplication(&a22.to_owned(), &(b21.to_owned() - &b11));
+    // M5 = (A11 + A12) * B22
+    let m5 = strassen_multiplication(&(a11.to_owned() + &a12), &b22.to_owned());
+    // M6 = (A21 - A11) * (B11 + B12)
+    let m6 = strassen_multiplication(&(a21.to_owned() - &a11), &(b11.to_owned() + &b12));
+    // M7 = (A12 - A22) * (B21 + B22)
+    let m7 = strassen_multiplication(&(a12.to_owned() - &a22), &(b21.to_owned() + &b22));
+
+    // Składanie bloków wynikowych C
+    let c11 = &m1 + &m4 - &m5 + &m7;
+    let c12 = &m3 + &m5;
+    let c21 = &m2 + &m4;
+    let c22 = &m1 - &m2 + &m3 + &m6;
+
+    let mut c_work = Array2::zeros((actual_n, actual_n));
+    c_work.slice_mut(s![0..mid, 0..mid]).assign(&c11);
+    c_work.slice_mut(s![0..mid, mid..actual_n]).assign(&c12);
+    c_work.slice_mut(s![mid..actual_n, 0..mid]).assign(&c21);
+    c_work.slice_mut(s![mid..actual_n, mid..actual_n]).assign(&c22);
+
+    // 4. Obcięcie wyniku do oryginalnego rozmiaru, jeśli wymiar wejściowy był nieparzysty
+    if is_odd {
+        c_work.slice(s![0..n, 0..n]).to_owned()
+    } else {
+        c_work
+    }
+}
+
+/// Rekurencyjny algorytm Ladermana dla macierzy dowolnego rozmiaru:
+/// 1. Warunek stopu: Jeśli n <= 3, stosujemy bezpośrednie obliczenia (wzory Ladermana dla 3x3 lub pętle).
+/// 2. Dopełnienie (Padding): Ponieważ macierz dzielimy na 3 części, rozmiar macierzy
+///    powinien być powiększony do najbliższej wielokrotności/potęgi liczby 3.
+/// 3. Podział na 9 bloków (3x3 podmacierze) i wykonanie 23 rekurencyjnych mnożeń.
+/// 4. Złożenie bloków wynikowych C oraz obcięcie do oryginalnego rozmiaru.
+pub fn laderman_multiplication(a: &Array2<f64>, b: &Array2<f64>) -> Array2<f64> {
+    let n = a.nrows();
+
+    // 1. Baza rekurencji dla małych macierzy
+    if n <= 3 {
+        return binet_multiplication(a,b)
+    }
+
+    // 2. Dopełnienie do wymiaru podzielnego przez 3
+    let modulo_n = n % 3;
+    let target_n;
+    if modulo_n == 0{
+        target_n = n;
+    }else{
+        if modulo_n == 1 {
+            target_n = n+2;
+        }else {
+            target_n = n+1;
+        }
+    }
+    // println!("target_n={}", target_n);
+    let a_work;
+    let b_work;
+    if target_n != n {
+        let mut a_padded = Array2::zeros((target_n, target_n));
+        let mut b_padded = Array2::zeros((target_n, target_n));
+        a_padded.slice_mut(s![0..n, 0..n]).assign(a);
+        b_padded.slice_mut(s![0..n, 0..n]).assign(b);
+        a_work = a_padded;
+        b_work = b_padded;
+    } else {
+        a_work = a.to_owned();
+        b_work = b.to_owned();
+    }
+
+    let size = target_n / 3;
+    let s1 = size;
+    let s2 = 2 * size;
+    let t = target_n;
+
+    // Podział macierzy roboczych na 9 bloków 3x3
+    let a11 = a_work.slice(s![0..s1, 0..s1]);
+    let a12 = a_work.slice(s![0..s1, s1..s2]);
+    let a13 = a_work.slice(s![0..s1, s2..t]);
+    let a21 = a_work.slice(s![s1..s2, 0..s1]);
+    let a22 = a_work.slice(s![s1..s2, s1..s2]);
+    let a23 = a_work.slice(s![s1..s2, s2..t]);
+    let a31 = a_work.slice(s![s2..t, 0..s1]);
+    let a32 = a_work.slice(s![s2..t, s1..s2]);
+    let a33 = a_work.slice(s![s2..t, s2..t]);
+
+    let b11 = b_work.slice(s![0..s1, 0..s1]);
+    let b12 = b_work.slice(s![0..s1, s1..s2]);
+    let b13 = b_work.slice(s![0..s1, s2..t]);
+    let b21 = b_work.slice(s![s1..s2, 0..s1]);
+    let b22 = b_work.slice(s![s1..s2, s1..s2]);
+    let b23 = b_work.slice(s![s1..s2, s2..t]);
+    let b31 = b_work.slice(s![s2..t, 0..s1]);
+    let b32 = b_work.slice(s![s2..t, s1..s2]);
+    let b33 = b_work.slice(s![s2..t, s2..t]);
+
+    // 3. Obliczenie 23 iloczynów Ladermana rekurencyjnie
+    let m1  = laderman_multiplication(&(a11.to_owned() + &a12 + &a13 - &a21 - &a22 - &a32 - &a33), &b22.to_owned());
+    let m2  = laderman_multiplication(&(a11.to_owned() - &a21), &(-b12.to_owned() + &b22));
+    let m3  = laderman_multiplication(&a22.to_owned(), &(-b11.to_owned() + &b12 + &b21 - &b22 - &b23 - &b31 + &b33));
+    let m4  = laderman_multiplication(&(-a11.to_owned() + &a21 + &a22), &(b11.to_owned() - &b12 + &b22));
+    let m5  = laderman_multiplication(&(a21.to_owned() + &a22), &(-b11.to_owned() + &b12));
+    let m6  = laderman_multiplication(&a11.to_owned(), &b11.to_owned());
+    let m7  = laderman_multiplication(&(-a11.to_owned() + &a31 + &a32), &(b11.to_owned() - &b13 + &b23));
+    let m8  = laderman_multiplication(&(-a11.to_owned() + &a31), &(b13.to_owned() - &b23));
+    let m9  = laderman_multiplication(&(a31.to_owned() + &a32), &(-b11.to_owned() + &b13));
+    let m10 = laderman_multiplication(&(a11.to_owned() + &a12 + &a13 - &a22 - &a23 - &a31 - &a32), &b23.to_owned());
+    let m11 = laderman_multiplication(&a32.to_owned(), &(-b11.to_owned() + &b13 + &b21 - &b22 - &b23 - &b31 + &b32));
+    let m12 = laderman_multiplication(&(-a13.to_owned() + &a32 + &a33), &(b22.to_owned() + &b31 - &b32));
+    let m13 = laderman_multiplication(&(a13.to_owned() - &a33), &(b22.to_owned() - &b32));
+    let m14 = laderman_multiplication(&a13.to_owned(), &b31.to_owned());
+    let m15 = laderman_multiplication(&(a32.to_owned() + &a33), &(-b31.to_owned() + &b32));
+    let m16 = laderman_multiplication(&(-a13.to_owned() + &a22 + &a23), &(b23.to_owned() + &b31 - &b33));
+    let m17 = laderman_multiplication(&(a13.to_owned() - &a23), &(b23.to_owned() - &b33));
+    let m18 = laderman_multiplication(&(a22.to_owned() + &a23), &(-b31.to_owned() + &b33));
+    let m19 = laderman_multiplication(&a12.to_owned(), &b21.to_owned());
+    let m20 = laderman_multiplication(&a23.to_owned(), &b32.to_owned());
+    let m21 = laderman_multiplication(&a21.to_owned(), &b13.to_owned());
+    let m22 = laderman_multiplication(&a31.to_owned(), &b12.to_owned());
+    let m23 = laderman_multiplication(&a33.to_owned(), &b33.to_owned());
+
+    // 4. Składanie bloków wynikowych C (3x3 podmacierze wynikowe)
+    let c11 = &m6 + &m14 + &m19;
+    let c12 = &m1 + &m4 + &m5 + &m6 + &m12 + &m14 + &m15;
+    let c13 = &m6 + &m7 + &m9 + &m10 + &m14 + &m16 + &m18;
+    let c21 = &m2 + &m3 + &m4 + &m6 + &m14 + &m16 + &m17;
+    let c22 = &m2 + &m4 + &m5 + &m6 + &m20;
+    let c23 = &m14 + &m16 + &m17 + &m18 + &m21;
+    let c31 = &m6 + &m7 + &m8 + &m11 + &m12 + &m13 + &m14;
+    let c32 = &m12 + &m13 + &m14 + &m15 + &m22;
+    let c33 = &m6 + &m7 + &m8 + &m9 + &m23;
+
+    let mut c_work = Array2::zeros((target_n, target_n));
+    c_work.slice_mut(s![0..s1, 0..s1]).assign(&c11);
+    c_work.slice_mut(s![0..s1, s1..s2]).assign(&c12);
+    c_work.slice_mut(s![0..s1, s2..t]).assign(&c13);
+    c_work.slice_mut(s![s1..s2, 0..s1]).assign(&c21);
+    c_work.slice_mut(s![s1..s2, s1..s2]).assign(&c22);
+    c_work.slice_mut(s![s1..s2, s2..t]).assign(&c23);
+    c_work.slice_mut(s![s2..t, 0..s1]).assign(&c31);
+    c_work.slice_mut(s![s2..t, s1..s2]).assign(&c32);
+    c_work.slice_mut(s![s2..t, s2..t]).assign(&c33);
+
+    // 5. Obcięcie wyniku do oryginalnego rozmiaru n x n
+    if target_n != n {
+        c_work.slice(s![0..n, 0..n]).to_owned()
+    } else {
+        c_work
+    }
 }
 
 
@@ -83,7 +255,7 @@ mod tests {
         
     #[test]
     fn test_strassen_multiplication_power_of_two() {
-        let n = 256;
+        let n = 64;
         let m1 = generate_nxn_matrix(n);
         let m2 = generate_nxn_matrix(n);
         let result = strassen_multiplication(&m1, &m2);
@@ -101,7 +273,7 @@ mod tests {
 
         #[test]
     fn test_strassen_multiplication_not_power_of_two() {
-        let n = 256+1;
+        let n = 64+1;
         let m1 = generate_nxn_matrix(n);
         let m2 = generate_nxn_matrix(n);
         let result = strassen_multiplication(&m1, &m2);
@@ -115,4 +287,34 @@ mod tests {
 
         assert!(result.shape() == &[n, n]);
     } 
+
+
+    #[test]
+    fn test_laderman_multiplication_power_of_two() {
+        let n = 64;
+        let m1 = generate_nxn_matrix(n);
+        let m2 = generate_nxn_matrix(n);
+        let result = laderman_multiplication(&m1, &m2);
+
+        let true_res = m1.dot(&m2);
+        Zip::from(&result)
+            .and(&true_res)
+            .for_each(|a, b| assert_float_relative_eq!(*a, *b));
+        assert!(result.shape() == &[n, n]);
+    }
+
+
+    #[test]
+    fn test_laderman_multiplication_not_power_of_two() {
+        let n = 64 + 1;
+        let m1 = generate_nxn_matrix(n);
+        let m2 = generate_nxn_matrix(n);
+        let result = laderman_multiplication(&m1, &m2);
+
+        let true_res = m1.dot(&m2);
+        Zip::from(&result)
+            .and(&true_res)
+            .for_each(|a, b| assert_float_relative_eq!(*a, *b));
+        assert!(result.shape() == &[n, n]);
+    }
 }

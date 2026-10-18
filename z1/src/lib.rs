@@ -1,4 +1,4 @@
-use ndarray::Array;
+use ndarray::Array2;
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
 pub mod multiplication_algorithms;
@@ -18,8 +18,9 @@ pub fn main1(){
 }
 
 
-pub fn generate_nxn_matrix(n: usize) -> Array<f64, ndarray::Dim<[usize; 2]>> {
-    let matrix = Array::random((n,n), Uniform::try_from(0.00000001.. 1.0).unwrap());
+
+pub fn generate_nxn_matrix(n: usize) -> Array2<f64> {
+    let matrix = Array2::random((n,n), Uniform::try_from(0.00000001.. 1.0).unwrap());
     matrix
 }
 
