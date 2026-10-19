@@ -1,26 +1,15 @@
 
-use z1::{csv_io::save_matrix_to_csv,csv_io::load_matrix_from_csv,OperationCounter,EmptyCounter,binet_multiplication,strassen_multiplication,laderman_multiplication};
+use z1::{generate_seeded_matrix,csv_io::save_matrix_to_csv,csv_io::load_matrix_from_csv,OperationCounter,EmptyCounter,binet_multiplication,strassen_multiplication,laderman_multiplication};
 use ndarray::Array2;
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 
 fn main(){
-    let _path = "z1/src/example/";
+    let _path = "z1/src/precision_comparison/";
     let seed: [u8;32] = [0;32];  // constant seed for reproducibility
     let mut _rng = ChaCha8Rng::from_seed(seed);
     //create_and_save_matrices(4, &mut _rng, _path); // create and save matrices to CSV files
-    compare_all_matrices();
-}
-
-
-fn generate_seeded_matrix(n: usize, rng: &mut ChaCha8Rng) -> ndarray::Array2<f64> {
-    let mut matrix = ndarray::Array2::<f64>::zeros((n, n));
-    for i in 0..n {
-        for j in 0..n {
-            matrix[[i, j]] = rng.random_range(0.00000001..1.0);
-        }
-    }
-    matrix
+    compare_all_matrices(_path);
 }
 
 
@@ -82,8 +71,8 @@ fn compare_matrices(result: &Array2<f64>, ground_truth: &Array2<f64>) {
 }
 
 
-fn compare_all_matrices() {
-    let path = "z1/src/example/";
+
+fn compare_all_matrices(path: &str) {
 
     let binet = load_matrix_from_csv(&format!("{}{}", path, "binet.csv")).unwrap();
     let strassen = load_matrix_from_csv(&format!("{}{}", path, "strassen.csv")).unwrap();

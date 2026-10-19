@@ -38,7 +38,7 @@ pub fn strassen_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
     let n = a.nrows();
 
     // 1. Warunek stopu dla małych macierzy
-    if n <= 3 {
+    if n <= 16 {
         return binet_multiplication(a, b, counter);
     }
 
@@ -82,7 +82,7 @@ pub fn strassen_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
     // M2 = (A21 + A22) * B11
     let m2 = strassen_multiplication(&(a21.to_owned() + &a22), &b11.to_owned(),counter);
     // M3 = A11 * (B12 - B22)
-    let m3 = strassen_multiplication(&a11.to_owned(), &(b12.to_owned() - &b22),counter );
+    let m3 = strassen_multiplication(&a11.to_owned(), &(b12.to_owned() - &b22),counter);
     // M4 = A22 * (B21 - B11)
     let m4 = strassen_multiplication(&a22.to_owned(), &(b21.to_owned() - &b11),counter);
     // M5 = (A11 + A12) * B22
@@ -124,7 +124,7 @@ pub fn laderman_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
     let n = a.nrows();
 
     // 1. Baza rekurencji dla małych macierzy
-    if n <= 3 {
+    if n <= 9 {
         return binet_multiplication(a,b,counter)
     }
 
@@ -311,21 +311,21 @@ mod tests {
 
     #[test]
     fn test_strassen_multiplication_counter() {
-    let n = 10;
+    let n = 50;
     let m1 = generate_nxn_matrix(n);
     let m2 = generate_nxn_matrix(n);
     let mut c = Counter::new();
     let _result = strassen_multiplication(&m1, &m2, &mut c);
     let (additions, multiplications, divisions) = c.get_count();
-    assert_eq!(2466, additions);
-    assert_eq!(1323, multiplications);
+    assert_eq!(131916, additions);
+    assert_eq!(107653, multiplications);
     assert_eq!(0, divisions);
     } 
 
 
     #[test]
-    fn test_laderman_multiplication_power_of_two() {
-        let n = 64;
+    fn test_laderman_multiplication_power_of_three() {
+        let n = 81;
         let m1 = generate_nxn_matrix(n);
         let m2 = generate_nxn_matrix(n);
         let result = laderman_multiplication(&m1, &m2, &mut EmptyCounter{});
@@ -339,8 +339,8 @@ mod tests {
 
 
     #[test]
-    fn test_laderman_multiplication_not_power_of_two() {
-        let n = 64 + 1;
+    fn test_laderman_multiplication_not_power_of_three() {
+        let n = 85;
         let m1 = generate_nxn_matrix(n);
         let m2 = generate_nxn_matrix(n);
         let result = laderman_multiplication(&m1, &m2, &mut EmptyCounter{});
@@ -356,14 +356,14 @@ mod tests {
 
     #[test]
     fn test_laderman_multiplication_counter() {
-    let n = 10;
+    let n = 50;
     let m1 = generate_nxn_matrix(n);
     let m2 = generate_nxn_matrix(n);
     let mut c = Counter::new();
     let _result = laderman_multiplication(&m1, &m2, &mut c);
     let (additions, multiplications, divisions) = c.get_count();
-    assert_eq!(2116, additions);
-    assert_eq!(4232, multiplications);
+    assert_eq!(95220, additions);
+    assert_eq!(114264, multiplications);
     assert_eq!(0, divisions);
     } 
 

@@ -1,6 +1,8 @@
 use ndarray::Array2;
 use ndarray_rand::RandomExt;
 use ndarray_rand::rand_distr::Uniform;
+use rand_chacha::ChaCha8Rng;
+use rand::prelude::*;
 pub mod multiplication_algorithms;
 pub mod csv_io;
 pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication};
@@ -11,6 +13,18 @@ pub fn generate_nxn_matrix(n: usize) -> Array2<f64> {
     let matrix = Array2::random((n,n), Uniform::try_from(0.00000001.. 1.0).unwrap());
     matrix
 }
+
+
+pub fn generate_seeded_matrix(n: usize, rng: &mut ChaCha8Rng) -> ndarray::Array2<f64> {
+    let mut matrix = ndarray::Array2::<f64>::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            matrix[[i, j]] = rng.random_range(0.00000001..1.0);
+        }
+    }
+    matrix
+}
+
 
 pub trait OperationCounter {
     fn new() -> Self;

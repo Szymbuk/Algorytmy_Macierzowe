@@ -5,7 +5,11 @@ edition = "2021"
 
 [[example]]
 name = "precision_comparison"
-path = "src/example/precision_comparison.rs"
+path = "src/precision_comparison/precision_comparison.rs"
+
+[[example]]
+name = "operation_comparison"
+path = "src/operation_comparison/operation_comparison.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
