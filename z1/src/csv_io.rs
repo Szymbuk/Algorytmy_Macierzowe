@@ -4,21 +4,21 @@ use std::fs::File;
 use csv::{ReaderBuilder, WriterBuilder};
 use ndarray_csv::{Array2Reader, Array2Writer};
 
-pub fn zapisz_macierz_do_csv(macierz: &Array2<f64>, sciezka: &str) -> Result<(), Box<dyn Error>> {
-    let plik = File::create(sciezka)?;
+pub fn save_matrix_to_csv(matrix: &Array2<f64>, path: &str) -> Result<(), Box<dyn Error>> {
+    let file = File::create(path)?;
     // Tworzymy writera bez nagłówków (czyste dane macierzy)
-    let mut writer = WriterBuilder::new().has_headers(false).from_writer(plik);
+    let mut writer = WriterBuilder::new().has_headers(false).from_writer(file);
     
     // Zapisuje całą strukturę ndarray prosto do pliku
-    writer.serialize_array2(macierz)?;
+    writer.serialize_array2(matrix)?;
     Ok(())
 }
 
-pub fn wczytaj_macierz_z_csv(sciezka: &str) -> Result<Array2<f64>, Box<dyn Error>> {
-    let plik = File::open(sciezka)?;
-    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(plik);
+pub fn load_matrix_from_csv(path: &str) -> Result<Array2<f64>, Box<dyn Error>> {
+    let file = File::open(path)?;
+    let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
     
     // Odczytuje plik i automatycznie parsuje go do Array2<f64>
-    let macierz: Array2<f64> = reader.deserialize_array2_dynamic()?;
-    Ok(macierz)
+    let matrix: Array2<f64> = reader.deserialize_array2_dynamic()?;
+    Ok(matrix)
 }
