@@ -1,0 +1,27 @@
+Porównanie Binet vs Dot Product:
+--- Raport błędów zmiennoprzecinkowych ---
+Maksymalny błąd (Max Error) : 2.220446049250313e-16
+Średni błąd (MAE)           : 3.469446951953614e-17
+Norma Frobeniusa            : 2.9373740229761033e-16
+------------------------------------------
+
+Porównanie Strassen vs Dot Product:
+--- Raport błędów zmiennoprzecinkowych ---
+Maksymalny błąd (Max Error) : 4.440892098500626e-16
+Średni błąd (MAE)           : 9.367506770274758e-17
+Norma Frobeniusa            : 6.695942734621828e-16
+------------------------------------------
+
+Porównanie Laderman vs Dot Product:
+--- Raport błędów zmiennoprzecinkowych ---
+Maksymalny błąd (Max Error) : 2.220446049250313e-16
+Średni błąd (MAE)           : 9.367506770274758e-17
+Norma Frobeniusa            : 5.117875266520903e-16
+------------------------------------------
+
+Porównanie Matlab vs Dot Product:
+--- Raport błędów zmiennoprzecinkowych ---
+Maksymalny błąd (Max Error) : 4.718447854656915e-16
+Średni błąd (MAE)           : 1.682681771697503e-16
+Norma Frobeniusa            : 9.057848289240456e-16
+------------------------------------------
