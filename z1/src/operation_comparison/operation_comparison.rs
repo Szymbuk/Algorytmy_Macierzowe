@@ -1,6 +1,5 @@
-use ndarray::{Array2, range};
-use z1::{EmptyCounter,Counter,generate_nxn_matrix,OperationCounter,binet_multiplication,strassen_multiplication,laderman_multiplication};
-use std::error::Error;
+use ndarray::{Array2};
+use z1::{Counter,generate_nxn_matrix,OperationCounter,binet_multiplication,strassen_multiplication,laderman_multiplication};
 use csv::Writer;
 
 
@@ -10,13 +9,13 @@ fn main(){
     for (func, name) in functions.iter().zip(function_names.iter()) {
         println!("Testing function: {}", name);
         let sizes = generate_sizes_n(1024 as usize);
-        let mut results = measure_operation_counts(*func, sizes);
+        let results = measure_operation_counts(*func, sizes.clone());
         println!();
 
         let mut wtr = Writer::from_path(format!("z1/src/operation_comparison/{name}_operation_count.csv")).unwrap();
-
-        for (add, mult) in results {
-            wtr.write_record(&[add.to_string(), mult.to_string()]).unwrap();
+        wtr.write_record(&["Size", "Additions", "Multiplications"]).unwrap();
+        for (size, (add, mult)) in sizes.iter().zip(results.iter()) {
+            wtr.write_record(&[size.to_string(), add.to_string(), mult.to_string()]).unwrap();
         }
 
         wtr.flush().unwrap();

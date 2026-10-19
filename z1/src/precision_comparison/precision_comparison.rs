@@ -8,12 +8,12 @@ fn main(){
     let _path = "z1/src/precision_comparison/";
     let seed: [u8;32] = [0;32];  // constant seed for reproducibility
     let mut _rng = ChaCha8Rng::from_seed(seed);
-    //create_and_save_matrices(4, &mut _rng, _path); // create and save matrices to CSV files
+    //_create_and_save_matrices(4, &mut _rng, _path); // create and save matrices to CSV files
     compare_all_matrices(_path);
 }
 
 
-fn create_and_save_matrices(n: usize, mut rng: &mut ChaCha8Rng, path: &str) {
+fn _create_and_save_matrices(n: usize, mut rng: &mut ChaCha8Rng, path: &str) {
     let matrix_a = generate_seeded_matrix(n, &mut rng);
     println!("Matrix:\n{}", matrix_a);
     save_matrix_to_csv(&matrix_a, &format!("{}{}", path, "matrix_a.csv")).unwrap();
