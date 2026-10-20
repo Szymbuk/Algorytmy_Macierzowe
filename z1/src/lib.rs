@@ -5,7 +5,7 @@ use rand_chacha::ChaCha8Rng;
 use rand::prelude::*;
 pub mod multiplication_algorithms;
 pub mod csv_io;
-pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication};
+pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication,dot_product};
 
 
 
@@ -24,6 +24,42 @@ pub fn generate_seeded_matrix(n: usize, rng: &mut ChaCha8Rng) -> ndarray::Array2
     }
     matrix
 }
+
+pub fn generate_sizes(max_n: usize) -> Vec<usize> {
+    let mut sizes = Vec::new();
+
+    // 1. Baza: rzadszy krok liniowy dla ogólnego trendu (np. co 10 lub 20)
+    for i in (10..=max_n).step_by(10) {
+        sizes.push(i);
+    }
+
+    // 2. Wstrzyknięcie potęg 2 i punktów "zaraz obok" (dla Strassena)
+    let powers_2 = [16, 32, 64, 128, 256, 512, 1024];
+    for &p in &powers_2 {
+        if p <= max_n {
+            sizes.push(p - 1); // Zaraz przed (najgorszy przypadek paddingu)
+            sizes.push(p);     // Idealna potęga (zero paddingu)
+            sizes.push(p + 1); // Zaraz po (znowu duży padding)
+        }
+    }
+
+    // 3. Wstrzyknięcie potęg 3 i punktów "zaraz obok" (dla Ladermana)
+    let powers_3 = [27, 81, 243, 729];
+    for &p in &powers_3 {
+        if p <= max_n {
+            sizes.push(p - 1);
+            sizes.push(p);
+            sizes.push(p + 1);
+        }
+    }
+
+    // 4. Sortowanie i usunięcie duplikatów
+    sizes.sort_unstable();
+    sizes.dedup();
+
+    sizes
+}
+
 
 
 pub trait OperationCounter {
