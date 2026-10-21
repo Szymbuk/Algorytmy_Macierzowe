@@ -1,5 +1,5 @@
 use ndarray::{Array2};
-use z1::{Counter,generate_nxn_matrix,OperationCounter,binet_multiplication,strassen_multiplication,laderman_multiplication};
+use z1::{Counter,generate_nxn_matrix,OperationCounter,binet_multiplication,strassen_multiplication,laderman_multiplication,generate_sizes};
 use csv::Writer;
 
 
@@ -8,7 +8,7 @@ fn main(){
     let function_names = vec!["Binet", "Strassen", "Laderman"];
     for (func, name) in functions.iter().zip(function_names.iter()) {
         println!("Testing function: {}", name);
-        let sizes = generate_sizes_n(1024 as usize);
+        let sizes = generate_sizes(1024 as usize);
         let results = measure_operation_counts(*func, sizes.clone());
         println!();
 
@@ -45,40 +45,6 @@ fn measure_operation_counts(func: fn(&Array2<f64>, &Array2<f64>, &mut Counter) -
 }
 
 
-pub fn generate_sizes_n(max_n: usize) -> Vec<usize> {
-    let mut sizes = Vec::new();
-
-    // 1. Baza: rzadszy krok liniowy dla ogólnego trendu (np. co 10 lub 20)
-    for i in (10..=max_n).step_by(10) {
-        sizes.push(i);
-    }
-
-    // 2. Wstrzyknięcie potęg 2 i punktów "zaraz obok" (dla Strassena)
-    let powers_2 = [16, 32, 64, 128, 256, 512, 1024];
-    for &p in &powers_2 {
-        if p <= max_n {
-            sizes.push(p - 1); // Zaraz przed (najgorszy przypadek paddingu)
-            sizes.push(p);     // Idealna potęga (zero paddingu)
-            sizes.push(p + 1); // Zaraz po (znowu duży padding)
-        }
-    }
-
-    // 3. Wstrzyknięcie potęg 3 i punktów "zaraz obok" (dla Ladermana)
-    let powers_3 = [27, 81, 243, 729];
-    for &p in &powers_3 {
-        if p <= max_n {
-            sizes.push(p - 1);
-            sizes.push(p);
-            sizes.push(p + 1);
-        }
-    }
-
-    // 4. Sortowanie i usunięcie duplikatów
-    sizes.sort_unstable();
-    sizes.dedup();
-
-    sizes
-}
 
 
 // function used during optimization tests to find the best end point for Strassen and Laderman algorithms,

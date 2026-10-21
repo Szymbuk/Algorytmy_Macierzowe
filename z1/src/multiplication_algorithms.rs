@@ -283,6 +283,10 @@ pub fn laderman_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
     }
 }
 
+pub fn dot_product(a: &Array2<f64>, b: &Array2<f64>) -> Array2<f64> {
+    a.dot(b)
+}
+
 
 #[cfg(test)]
 mod tests {
