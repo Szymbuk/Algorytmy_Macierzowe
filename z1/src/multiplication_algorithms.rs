@@ -26,7 +26,7 @@ pub fn binet_recursive_multiplication(a : &Array2<f64>, b: &Array2<f64>,counter:
         return binet_multiplication(a, b, counter);
     }
 
-    let (a_work, is_odd, original_n) = make_even(a);
+    let (a_work, is_odd, _original_n) = make_even(a);
     let (b_work, _, _) = make_even(b);
 
     let actual_n = a_work.nrows();
@@ -58,6 +58,8 @@ pub fn binet_recursive_multiplication(a : &Array2<f64>, b: &Array2<f64>,counter:
     let term7 = binet_recursive_multiplication(&a21.to_owned(), &b12.to_owned(),counter);
     let term8 = binet_recursive_multiplication(&a22.to_owned(), &b22.to_owned(),counter);
     let c22 = &term7 + &term8;
+
+    counter.increment_additions(a11.nrows() * a11.ncols() * 4);
 
     let mut c_work = Array2::zeros((actual_n, actual_n));
     c_work.slice_mut(s![0..mid, 0..mid]).assign(&c11);
@@ -92,7 +94,7 @@ pub fn strassen_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
     }
 
     // 2. Obsługa nieparzystego wymiaru (dynamiczne powiększenie do parzystego)
-    let (a_work, is_odd, original_n) = make_even(a);
+    let (a_work, is_odd, _original_n) = make_even(a);
     let (b_work, _, _) = make_even(b);
 
     let actual_n = a_work.nrows();
