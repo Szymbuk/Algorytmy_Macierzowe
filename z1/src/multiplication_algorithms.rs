@@ -3,10 +3,7 @@ use ndarray::s;
 
 use crate::{OperationCounter};
 
-
-    
 pub fn binet_multiplication(a_array: &Array2<f64>, b_array: &Array2<f64>,counter: &mut impl OperationCounter) -> Array2<f64> {
-    
     let a = a_array.view();
     let b = b_array.view();
     let mut c = Array2::zeros((a.nrows(), b.ncols()));
@@ -22,6 +19,58 @@ pub fn binet_multiplication(a_array: &Array2<f64>, b_array: &Array2<f64>,counter
     c
 }
 
+pub fn binet_recursive_multiplication(a : &Array2<f64>, b: &Array2<f64>,counter: &mut impl OperationCounter) -> Array2<f64> {
+    let n = a.nrows();
+
+    if n <= 2 {
+        return binet_multiplication(a, b, counter);
+    }
+
+    let (a_work, is_odd, original_n) = make_even(a);
+    let (b_work, _, _) = make_even(b);
+
+    let actual_n = a_work.nrows();
+
+    let mid = actual_n / 2;
+
+    let a11 = a_work.slice(s![0..mid, 0..mid]);
+    let a12 = a_work.slice(s![0..mid, mid..actual_n]);
+    let a21 = a_work.slice(s![mid..actual_n, 0..mid]);
+    let a22 = a_work.slice(s![mid..actual_n, mid..actual_n]);
+
+    let b11 = b_work.slice(s![0..mid, 0..mid]);
+    let b12 = b_work.slice(s![0..mid, mid..actual_n]);
+    let b21 = b_work.slice(s![mid..actual_n, 0..mid]);
+    let b22 = b_work.slice(s![mid..actual_n, mid..actual_n]);
+
+    let term1 = binet_recursive_multiplication(&a11.to_owned(), &b11.to_owned(),counter);
+    let term2 = binet_recursive_multiplication(&a12.to_owned(), &b21.to_owned(),counter);
+    let c11 = &term1 + &term2;
+
+    let term3 = binet_recursive_multiplication(&a11.to_owned(), &b12.to_owned(),counter);
+    let term4 = binet_recursive_multiplication(&a12.to_owned(), &b22.to_owned(),counter);
+    let c12 = &term3 + &term4;
+
+    let term5 = binet_recursive_multiplication(&a21.to_owned(), &b11.to_owned(),counter);
+    let term6 = binet_recursive_multiplication(&a22.to_owned(), &b21.to_owned(),counter);
+    let c21 = &term5 + &term6;
+
+    let term7 = binet_recursive_multiplication(&a21.to_owned(), &b12.to_owned(),counter);
+    let term8 = binet_recursive_multiplication(&a22.to_owned(), &b22.to_owned(),counter);
+    let c22 = &term7 + &term8;
+
+    let mut c_work = Array2::zeros((actual_n, actual_n));
+    c_work.slice_mut(s![0..mid, 0..mid]).assign(&c11);
+    c_work.slice_mut(s![0..mid, mid..actual_n]).assign(&c12);
+    c_work.slice_mut(s![mid..actual_n, 0..mid]).assign(&c21);
+    c_work.slice_mut(s![mid..actual_n, mid..actual_n]).assign(&c22);
+
+    if is_odd {
+        c_work.slice(s![0..n, 0..n]).to_owned()
+    } else {
+        c_work
+    }
+}
 
 
 /// Algorytm Strassena z dynamicznym uzupełnianiem (paddingiem) do parzystego wymiaru:
@@ -43,25 +92,10 @@ pub fn strassen_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
     }
 
     // 2. Obsługa nieparzystego wymiaru (dynamiczne powiększenie do parzystego)
-    let is_odd = n % 2 != 0;
-    let actual_n = if is_odd { n + 1 } else { n };
+    let (a_work, is_odd, original_n) = make_even(a);
+    let (b_work, _, _) = make_even(b);
 
-    let a_work;
-    let b_work;
-
-    if is_odd {
-        let mut a_padded = Array2::zeros((actual_n, actual_n));
-        let mut b_padded = Array2::zeros((actual_n, actual_n));
-
-        a_padded.slice_mut(s![0..n, 0..n]).assign(a);
-        b_padded.slice_mut(s![0..n, 0..n]).assign(b);
-
-        a_work = a_padded;
-        b_work = b_padded;
-    } else {
-        a_work = a.to_owned();
-        b_work = b.to_owned();
-    }
+    let actual_n = a_work.nrows();
 
     let mid = actual_n / 2;
 
@@ -113,7 +147,20 @@ pub fn strassen_multiplication(a: &Array2<f64>, b: &Array2<f64>, counter: &mut i
         c_work
     }
 }
+// funkcja pomocznicza do sprawdzenia i tworzenia parzystych macierzy
+pub fn make_even(a: &Array2<f64>) -> (Array2<f64>, bool, usize) {
+    let n = a.nrows();
+    let is_odd = n % 2 != 0;
 
+    if is_odd {
+        let actual_n = n + 1;
+        let mut a_padded = Array2::zeros((actual_n, actual_n));
+        a_padded.slice_mut(s![0..n, 0..n]).assign(a);
+        (a_padded, true, n)
+    } else {
+        (a.to_owned(), false, n)
+    }
+}
 /// Rekurencyjny algorytm Ladermana dla macierzy dowolnego rozmiaru:
 /// 1. Warunek stopu: Jeśli n <= 3, stosujemy bezpośrednie obliczenia (wzory Ladermana dla 3x3 lub pętle).
 /// 2. Dopełnienie (Padding): Ponieważ macierz dzielimy na 3 części, rozmiar macierzy
@@ -259,6 +306,22 @@ mod tests {
 
         assert!(result.shape() == &[n, n]);
     }
+
+    #[test]
+    fn test_binet_recursive_multiplication() {
+        let n = 3;
+        let m1 = generate_nxn_matrix(n);
+        let m2 = generate_nxn_matrix(n);
+        let result = binet_recursive_multiplication(&m1, &m2, &mut EmptyCounter{});
+
+        let true_res = m1.dot(&m2);
+        Zip::from(&result)
+            .and(&true_res)
+            .for_each(|a, b| assert_float_relative_eq!(*a, *b));
+
+        assert!(result.shape() == &[n, n]);
+    }
+
 
     #[test]
     fn test_binet_multiplication_counter() {
