@@ -12,9 +12,9 @@ fn main() {
 }
 
 fn binet_complexity() {
-    //let sizes = generate_sizes(1025);
+    let sizes = generate_sizes(1025);
     //let sizes = vec![32, 64, 128, 256, 512,1024,2048];
-    let sizes = vec![27, 81, 243, 729, 2187];
+    //let sizes = vec![27, 81, 243, 729, 2187];
     // let sizes = vec![32, 64, 128, 256, 512];
     let mut binet_results = Vec::new();
 
@@ -52,8 +52,8 @@ fn binet_complexity() {
 
 
 fn strassen_complexity() {
-    //let sizes = generate_sizes(1025);
-    let sizes = vec![27, 81, 243, 729, 2187];
+    let sizes = generate_sizes(1025);
+    //let sizes = vec![27, 81, 243, 729, 2187];
     //let sizes = vec![32, 64, 128, 256, 512,1024,2048];
     let mut strassen_results = Vec::new();
 
@@ -90,8 +90,8 @@ fn strassen_complexity() {
 }
 
 fn laderman_complexity() {
-    //let sizes = generate_sizes(1025);
-    let sizes = vec![27, 81, 243, 729, 2187];
+    let sizes = generate_sizes(1025);
+    //let sizes = vec![27, 81, 243, 729, 2187];
     //let sizes = vec![32, 64, 128, 256, 512,1024,2048];
     let mut laderman_results = Vec::new();
 

@@ -168,8 +168,6 @@ pub fn calculate_empirical_complexity_exponent(data: &[BenchmarkData], use_flops
 
 #[cfg(test)]
 mod tests {
-    use std::time::Instant;
-    use crate::multiplication_algorithms::binet_recursive_multiplication;
     use super::*;
     #[test]
     fn test_matrix_generation() {
