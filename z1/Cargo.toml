@@ -11,6 +11,11 @@ path = "src/precision_comparison/precision_comparison.rs"
 name = "operation_comparison"
 path = "src/operation_comparison/operation_comparison.rs"
 
+
+[[example]]
+name = "time_complexity_calculator"
+path = "src/time_complexity_calculator.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
