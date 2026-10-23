@@ -1,11 +1,11 @@
-use ndarray::Array2;
-use ndarray_rand::RandomExt;
-use ndarray_rand::rand_distr::Uniform;
-use rand_chacha::ChaCha8Rng;
-use rand::prelude::*;
+pub use ndarray::{Array2,s};
+pub use ndarray_rand::RandomExt;
+pub use ndarray_rand::rand_distr::Uniform;
+pub use rand_chacha::ChaCha8Rng;
+pub use rand::prelude::*;
 pub mod multiplication_algorithms;
 pub mod csv_io;
-pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication,dot_product};
+pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication,dot_product,make_even};
 
 
 
