@@ -8,7 +8,7 @@ fn main() {
     let a = generate_nxn_matrix(4);
     println!("Original matrix: \n{}", a);
     let mut counter = EmptyCounter::new();
-    let inv = matrix_invert_binet(&a, &mut counter).unwrap();
+    let inv = recursive_matrix_inversion(&a, &mut counter, MultiplicationAlgorithm::Binet, MatrixType::Normal).unwrap();
 
     println!("Inverted matrix: \n{}", inv);
 
