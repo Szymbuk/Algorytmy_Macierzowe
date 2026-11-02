@@ -45,14 +45,8 @@ pub fn make_divisible_by_3(a: &Array2<f64>) -> (Array2<f64>, bool, usize) {
         return (a.clone(), false, n);
     }
     let target_n = n + (3 - rem);
-    let mut padded = Array2::zeros((target_n, target_n));
+    let mut padded = Array2::eye(target_n);
     padded.slice_mut(s![0..n, 0..n]).assign(a);
-
-    // Ustawienie jedynek na przekątnej dla dopełnionych wierszy/kolumn,
-    // aby macierz jednostkowa/odwrotna nie miała zerowych dzielników na przekątnej
-    for i in n..target_n {
-        padded[[i, i]] = 1.0;
-    }
 
     (padded, true, n)
 }

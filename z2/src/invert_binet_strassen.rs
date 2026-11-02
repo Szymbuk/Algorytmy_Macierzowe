@@ -2,7 +2,8 @@ use crate::*;
 pub fn recursive_matrix_inversion(a: &Array2<f64>,
                                   counter: &mut impl OperationCounter,
                                   m_algo: MultiplicationAlgorithm,
-                                  m_type: MatrixType,) -> Result<Array2<f64>, String> {
+                                  m_type: MatrixType,
+) -> Result<Array2<f64>, String> {
     let n = a.nrows();
     if n != a.ncols() {
         return Err("Matrix must be square".to_string());

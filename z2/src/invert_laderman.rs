@@ -1,50 +1,47 @@
 use crate::*;
 
-pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>, counter: &mut C, ) -> Result<Array2<f64>, String> {
+pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>,
+                                                              counter: &mut C,
+                                                              m_algo: MultiplicationAlgorithm,
+) -> Result<Array2<f64>, String> {
     let n = a.nrows();
     if n != a.ncols() {
         return Err("Matrix must be square".to_string());
     }
 
-    if n <= 2 {
-        return recursive_matrix_inversion(a,counter,MultiplicationAlgorithm::Strassen,MatrixType::Normal);
+    if n == 1 {
+        if a[[0, 0]] == 0.0 {
+            return Err("Matrix is singular (division by zero)".to_string());
+        }
+        return Ok(Array2::from_elem((1, 1), 1.0 / a[[0, 0]]));
     }
 
     // Jeśli wymiar nie jest podzielny przez 3, robimy padding do najbliższej wielokrotności 3
     let (a_work, is_padded, original_n) = make_divisible_by_3(a);
     let actual_n = a_work.nrows();
 
-    // Jeśli po paddingu wymiar wynosi dokładnie 3, a baza rekurencji tego wymaga:
-    if actual_n == 3 {
-        let inv_3x3 = standard_invert_3x3(&a_work, counter)?;
-        if is_padded {
-            return Ok(inv_3x3.slice(s![0..original_n, 0..original_n]).to_owned());
-        }
-        return Ok(inv_3x3);
-    }
-
-    let third = actual_n / 3;
-    let t2 = third * 2;
+    let one_third = actual_n / 3;
+    let two_thirds = one_third * 2;
 
     // Podział macierzy na 9 bloków (3x3 podmacierze)
-    let a11 = a_work.slice(s![0..third, 0..third]).to_owned();
-    let a12 = a_work.slice(s![0..third, third..t2]).to_owned();
-    let a13 = a_work.slice(s![0..third, t2..actual_n]).to_owned();
+    let a11 = a_work.slice(s![0..one_third, 0..one_third]).to_owned();
+    let a12 = a_work.slice(s![0..one_third, one_third..two_thirds]).to_owned();
+    let a13 = a_work.slice(s![0..one_third, two_thirds..actual_n]).to_owned();
 
-    let a21 = a_work.slice(s![third..t2, 0..third]).to_owned();
-    let a22 = a_work.slice(s![third..t2, third..t2]).to_owned();
-    let a23 = a_work.slice(s![third..t2, t2..actual_n]).to_owned();
+    let a21 = a_work.slice(s![one_third..two_thirds, 0..one_third]).to_owned();
+    let a22 = a_work.slice(s![one_third..two_thirds, one_third..two_thirds]).to_owned();
+    let a23 = a_work.slice(s![one_third..two_thirds, two_thirds..actual_n]).to_owned();
 
-    let a31 = a_work.slice(s![t2..actual_n, 0..third]).to_owned();
-    let a32 = a_work.slice(s![t2..actual_n, third..t2]).to_owned();
-    let a33 = a_work.slice(s![t2..actual_n, t2..actual_n]).to_owned();
+    let a31 = a_work.slice(s![two_thirds..actual_n, 0..one_third]).to_owned();
+    let a32 = a_work.slice(s![two_thirds..actual_n, one_third..two_thirds]).to_owned();
+    let a33 = a_work.slice(s![two_thirds..actual_n, two_thirds..actual_n]).to_owned();
 
     // Pomocnicza domknięcie dla mnożenia metodą Ladermana
     // Utworzenie instancji mnożnika z algorytmem Ladermana
-    let mut multiplier = MatrixMultiplier::new(counter, MultiplicationAlgorithm::Laderman);
+    let mut multiplier = MatrixMultiplier::new(counter, m_algo);
 
     // --- KROK 1: M1 = A11^-1 ---
-    let m1 = recursive_matrix_inversion_9block(&a11, multiplier.counter)?;
+    let m1 = recursive_matrix_inversion_9block(&a11, multiplier.counter, m_algo)?;
 
     // --- KROK 2: Redukcje pierwszego wiersza/kolumny ---
     let x21 = multiplier.multiply(&a21, &m1);
@@ -64,7 +61,7 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>, c
     let s33 = &a33 - &x31_a13;
 
     // --- KROK 4: Dopełnienie Schura poziomu 2 (redukcja S22) ---
-    let s22_inv = recursive_matrix_inversion_9block(&s22, multiplier.counter)?;
+    let s22_inv = recursive_matrix_inversion_9block(&s22, multiplier.counter, m_algo)?;
 
     let z32 = multiplier.multiply(&s32, &s22_inv);
     let w23 = multiplier.multiply(&s22_inv, &s23);
@@ -72,7 +69,7 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>, c
     let z32_s23 = multiplier.multiply(&z32, &s23);
     let s33_prime = &s33 - &z32_s23;
 
-    let s33_prime_inv = recursive_matrix_inversion_9block(&s33_prime, multiplier.counter)?;
+    let s33_prime_inv = recursive_matrix_inversion_9block(&s33_prime, multiplier.counter, m_algo)?;
 
     // --- KROK 5: Precyzyjna rekonstrukcja 9 bloków macierzy odwrotnej ---
     let b33 = s33_prime_inv;
@@ -117,17 +114,17 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>, c
     // --- KROK 6: Złożenie macierzy wynikowej ---
     let mut c_work = Array2::zeros((actual_n, actual_n));
 
-    c_work.slice_mut(s![0..third, 0..third]).assign(&b11);
-    c_work.slice_mut(s![0..third, third..t2]).assign(&b12);
-    c_work.slice_mut(s![0..third, t2..actual_n]).assign(&b13);
+    c_work.slice_mut(s![0..one_third, 0..one_third]).assign(&b11);
+    c_work.slice_mut(s![0..one_third, one_third..two_thirds]).assign(&b12);
+    c_work.slice_mut(s![0..one_third, two_thirds..actual_n]).assign(&b13);
 
-    c_work.slice_mut(s![third..t2, 0..third]).assign(&b21);
-    c_work.slice_mut(s![third..t2, third..t2]).assign(&b22);
-    c_work.slice_mut(s![third..t2, t2..actual_n]).assign(&b23);
+    c_work.slice_mut(s![one_third..two_thirds, 0..one_third]).assign(&b21);
+    c_work.slice_mut(s![one_third..two_thirds, one_third..two_thirds]).assign(&b22);
+    c_work.slice_mut(s![one_third..two_thirds, two_thirds..actual_n]).assign(&b23);
 
-    c_work.slice_mut(s![t2..actual_n, 0..third]).assign(&b31);
-    c_work.slice_mut(s![t2..actual_n, third..t2]).assign(&b32);
-    c_work.slice_mut(s![t2..actual_n, t2..actual_n]).assign(&b33);
+    c_work.slice_mut(s![two_thirds..actual_n, 0..one_third]).assign(&b31);
+    c_work.slice_mut(s![two_thirds..actual_n, one_third..two_thirds]).assign(&b32);
+    c_work.slice_mut(s![two_thirds..actual_n, two_thirds..actual_n]).assign(&b33);
 
     if is_padded {
         Ok(c_work.slice(s![0..original_n, 0..original_n]).to_owned())
@@ -136,69 +133,22 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>, c
     }
 }
 
-pub fn standard_invert_3x3<C: OperationCounter>(
-    a: &Array2<f64>,
-    counter: &mut C,
-) -> Result<Array2<f64>, String> {
-    if a.nrows() != 3 || a.ncols() != 3 {
-        return Err("Macierz musi mieć wymiar 3x3".to_string());
-    }
-
-    let m00 = a[[0, 0]]; let m01 = a[[0, 1]]; let m02 = a[[0, 2]];
-    let m10 = a[[1, 0]]; let m11 = a[[1, 1]]; let m12 = a[[1, 2]];
-    let m20 = a[[2, 0]]; let m21 = a[[2, 1]]; let m22 = a[[2, 2]];
-
-    counter.increment_multiplications(9);
-    counter.increment_additions(5);
-
-    let det = m00 * (m11 * m22 - m12 * m21)
-        - m01 * (m10 * m22 - m12 * m20)
-        + m02 * (m10 * m21 - m11 * m20);
-
-    if det.abs() < 1e-12 {
-        return Err("Macierz jest osobliwa (wyznacznik jest równy lub bliski zeru)".to_string());
-    }
-
-    let inv_det = 1.0 / det;
-    counter.increment_multiplications(1);
-
-    // 2. Obliczenie macierzy dołączonej (transponowanej macierzy dopełnień algebrycznych)
-    let mut inv = Array2::zeros((3, 3));
-
-    inv[[0, 0]] =  (m11 * m22 - m12 * m21) * inv_det;
-    inv[[0, 1]] = -(m01 * m22 - m02 * m21) * inv_det;
-    inv[[0, 2]] =  (m01 * m12 - m02 * m11) * inv_det;
-
-    inv[[1, 0]] = -(m10 * m22 - m12 * m20) * inv_det;
-    inv[[1, 1]] =  (m00 * m22 - m02 * m20) * inv_det;
-    inv[[1, 2]] = -(m00 * m12 - m02 * m10) * inv_det;
-
-    inv[[2, 0]] =  (m10 * m21 - m11 * m20) * inv_det;
-    inv[[2, 1]] = -(m00 * m21 - m01 * m20) * inv_det;
-    inv[[2, 2]] =  (m00 * m11 - m01 * m10) * inv_det;
-
-    counter.increment_multiplications(18);
-    counter.increment_additions(9);
-
-    Ok(inv)
-}
-
 #[cfg(test)]
 mod tests_9block {
     use super::*;
-    use ndarray::{array, Array2};
-
+    use ndarray::{Array2};
 
     #[test]
     fn test_recursive_matrix_inversion_9block_9x9() {
         // 1. Definicja przykładowej nieosobliwej macierzy 9x9 z dominującą przekątną
-        let mut a = generate_nxn_matrix(9);
-        let mut b = a.clone();
+        let n = 6;
+        let mut a = generate_nxn_matrix(n);
+        let b = a.clone();
 
         let mut counter = EmptyCounter{};
 
         // 2. Wywołanie odwracania macierzy z podziałem na 9 bloków i Ladermanem
-        let a_inv_9block = recursive_matrix_inversion_9block(&a, &mut counter)
+        let a_inv_9block = recursive_matrix_inversion_9block(&a, &mut counter, MultiplicationAlgorithm::Laderman)
             .expect("Odwracanie macierzy 9x9 metodą 9-blokową nie powiodło się");
 
         // 3. Obliczenie iloczynu A * A^(-1) przy użyciu domyślnego mnożenia
@@ -206,11 +156,11 @@ mod tests_9block {
         let identity_result = multiplier.multiply(&a, &a_inv_9block);
 
         // 4. Weryfikacja 1: A * A^(-1) == I (Macierz jednostkowa 9x9)
-        let expected_identity = Array2::<f64>::eye(9);
+        let expected_identity = Array2::<f64>::eye(n);
         let epsilon = 1e-5;
 
-        for i in 0..9 {
-            for j in 0..9 {
+        for i in 0..n {
+            for j in 0..n {
                 assert!(
                     (identity_result[[i, j]] - expected_identity[[i, j]]).abs() < epsilon,
                     "Błąd mnożenia A * A^(-1) na pozycji [{}, {}]: oczekiwano {}, otrzymano {}",
@@ -223,8 +173,8 @@ mod tests_9block {
         let b_inv_binet = recursive_matrix_inversion(&b, &mut counter, MultiplicationAlgorithm::Binet, MatrixType::Normal)
             .expect("Odwracanie macierzy metodą Binéta nie powiodło się");
 
-        for i in 0..9 {
-            for j in 0..9 {
+        for i in 0..n {
+            for j in 0..n {
                 assert!(
                     (a_inv_9block[[i, j]] - b_inv_binet[[i, j]]).abs() < epsilon,
                     "Rozbieżność między metodą 9-blokową a Binétem na pozycji [{}, {}]: 9block={}, Binet={}",
@@ -233,6 +183,6 @@ mod tests_9block {
             }
         }
 
-        println!("Test odwracania macierzy 9x9 z podziałem na 9 bloków zakończony sukcesem!");
+        println!("Test odwracania macierzy {}x{} z podziałem na 9 bloków zakończony sukcesem!",n,n);
     }
 }
