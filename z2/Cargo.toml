@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 z1 = { path = "../z1" }
-ndarray = "0.17.2"
+ndarray =  {workspace = true}
+ndarray-linalg = { workspace = true}

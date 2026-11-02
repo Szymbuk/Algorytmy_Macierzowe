@@ -1,8 +1,11 @@
 pub mod invert_binet_strassen;
 pub mod factorizationLU_binet_strassen;
 pub use crate::invert_binet_strassen::{recursive_matrix_inversion};
+pub use crate::factorizationLU_binet_strassen::{recursive_lu};
 //use::z1::{generate_nxn_matrix,generate_seeded_matrix,generate_sizes, OperationCounter,Counter,EmptyCounter,binet_multiplication, strassen_multiplication,laderman_multiplication,dot_product,make_even};
 pub use z1::*;
+pub use ndarray_linalg::Inverse;
+pub use ndarray_linalg::Factorize;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum MatrixType {
@@ -10,6 +13,7 @@ pub enum MatrixType {
     Lower,  // Macierz dolnotrójkątna
     Upper,  // Macierz górnotrójkątna
 }
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum MultiplicationAlgorithm {
     Binet,

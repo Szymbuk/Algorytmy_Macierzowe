@@ -9,6 +9,7 @@ z2 = { path = "../z2" }
 z3 = { path = "../z3" }
 z4 = { path = "../z4" }
 criterion = {workspace = true}
+ndarray-linalg= {workspace = true}
 
 
 
@@ -16,9 +17,9 @@ criterion = {workspace = true}
 name = "z1_bench" # Nazwa pliku z testem (bez .rs)
 harness = false   # Wyłącza domyślny tester Rusta na rzecz Criteriona
 
-# [[bench]]
-# name = "z2_bench"
-# harness = false 
+[[bench]]
+name = "z2_bench"
+harness = false 
 
 # [[bench]]
 # name = "z3_bench"
