@@ -59,10 +59,12 @@ pub fn recursive_matrix_inversion(a: &Array2<f64>,
         }
 
         MatrixType::Lower => {
-            // === WARIANT 2: Macierz dolnotrójkątna ===
-            // Odwrotność macierzy dolnotrójkątnej:
-            // [ A11    0  ]^-1 = [ A11_inv                      0    ]
-            // [ A21   A22 ]      [ -A22_inv * A21 * A11_inv  A22_inv ]
+            /*
+            === WARIANT 2: Macierz dolnotrójkątna ===
+            Odwrotność macierzy dolnotrójkątnej:
+            [ A11    0  ]^-1 = [ A11_inv                      0    ]
+            [ A21   A22 ]      [ -A22_inv * A21 * A11_inv  A22_inv ]
+            */
 
             let a11_inv = recursive_matrix_inversion(&a11.to_owned(), multiplier.counter, m_algo, MatrixType::Lower)?;
             let a22_inv = recursive_matrix_inversion(&a22.to_owned(), multiplier.counter, m_algo, MatrixType::Lower)?;
@@ -77,10 +79,12 @@ pub fn recursive_matrix_inversion(a: &Array2<f64>,
         }
 
         MatrixType::Upper => {
-            // === WARIANT 3: Macierz górnotrójkątna ===
-            // Odwrotność macierzy górnotrójkątnej:
-            // [ A11  A12 ]^-1 = [ A11_inv  -A11_inv * A12 * A22_inv ]
-            // [  0   A22 ]      [    0             A22_inv          ]
+            /*
+            === WARIANT 3: Macierz górnotrójkątna ===
+            Odwrotność macierzy górnotrójkątnej:
+            [ A11  A12 ]^-1 = [ A11_inv  -A11_inv * A12 * A22_inv ]
+            [  0   A22 ]      [    0             A22_inv          ]
+            */
 
             let a11_inv = recursive_matrix_inversion(&a11.to_owned(), multiplier.counter, m_algo, MatrixType::Upper)?;
             let a22_inv = recursive_matrix_inversion(&a22.to_owned(), multiplier.counter, m_algo, MatrixType::Upper)?;
@@ -338,12 +342,13 @@ mod tests {
     #[test]
     fn test_matrix_inversion_binet_and_strassen() {
         // 1. Zdefiniowanie przykładowej macierzy kwadratowej A 4x4
-        let a = array![
-            [4.0, 7.0, 2.0, 3.0],
-            [0.0, 2.0, 1.0, 5.0],
-            [1.0, 0.0, 3.0, 2.0],
-            [2.0, 4.0, 1.0, 1.0]
-        ];
+        // let a = array![
+        //     [4.0, 7.0, 2.0, 3.0],
+        //     [0.0, 2.0, 1.0, 5.0],
+        //     [1.0, 0.0, 3.0, 2.0],
+        //     [2.0, 4.0, 1.0, 1.0]
+        // ];
+        let a = generate_nxn_matrix(9);
 
         let mut counter = EmptyCounter {};
 

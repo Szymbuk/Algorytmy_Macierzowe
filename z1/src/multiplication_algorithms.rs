@@ -156,7 +156,7 @@ pub fn make_even(a: &Array2<f64>) -> (Array2<f64>, bool, usize) {
 
     if is_odd {
         let actual_n = n + 1;
-        let mut a_padded = Array2::zeros((actual_n, actual_n));
+        let mut a_padded = Array2::eye(actual_n);
         a_padded.slice_mut(s![0..n, 0..n]).assign(a);
         (a_padded, true, n)
     } else {
