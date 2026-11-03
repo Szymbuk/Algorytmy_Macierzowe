@@ -60,7 +60,7 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>,
     let s32 = &a32 - &x31_a12;
     let s33 = &a33 - &x31_a13;
 
-    multiplier.counter.increment_additions(m_size * m_size * 4);
+    multiplier.counter.increment_additions(one_third * one_third * 4);
 
     // --- KROK 4: Dopełnienie Schura poziomu 2 (redukcja S22) ---
     let s22_inv = recursive_matrix_inversion_9block(&s22, multiplier.counter, m_algo)?;
@@ -146,7 +146,7 @@ mod tests_9block {
     fn test_recursive_matrix_inversion_9block_9x9() {
         // 1. Definicja przykładowej nieosobliwej macierzy 9x9 z dominującą przekątną
         let n = 6;
-        let mut a = generate_nxn_matrix(n);
+        let a = generate_nxn_matrix(n);
         let b = a.clone();
 
         let mut counter = EmptyCounter{};

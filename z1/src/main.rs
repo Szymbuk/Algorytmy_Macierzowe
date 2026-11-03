@@ -14,11 +14,11 @@ fn main() {
     let mut c3 = Counter::new();
 
     let start = Instant::now();
-    let res = binet_multiplication(&m, &m2, &mut c1);
+    let _res = binet_multiplication(&m, &m2, &mut c1);
     let t1 = start.elapsed();
-    let res2 = strassen_multiplication(&m, &m2, &mut c2);
+    let _res2 = strassen_multiplication(&m, &m2, &mut c2);
     let t2 = start.elapsed()-t1;
-    let res3 = laderman_multiplication(&m, &m2, &mut c3);
+    let _res3 = laderman_multiplication(&m, &m2, &mut c3);
     let t3 = start.elapsed()-t2;
 
 

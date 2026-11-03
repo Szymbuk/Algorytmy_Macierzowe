@@ -345,7 +345,7 @@ pub fn recursive_matrix_inversion(a: &Array2<f64>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{array, Array2};
+    use ndarray::{Array2};
 
     #[test]
     fn test_matrix_inversion_binet_and_strassen() {
