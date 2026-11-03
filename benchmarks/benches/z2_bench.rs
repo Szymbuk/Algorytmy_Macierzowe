@@ -11,7 +11,7 @@ fn benchmark_matrix_inversion(c: &mut Criterion) {
 
 
     //let sizes = vec![16, 32, 64, 81, 128, 243, 256];
-    let sizes = generate_sizes(30 as usize);
+    let sizes = generate_sizes(1025 as usize);
 
     for n in sizes {
 
@@ -54,7 +54,7 @@ fn benchmark_matrix_lu_factorization(c: &mut Criterion) {
 
 
     //let sizes = vec![16, 32, 64, 81, 128, 243, 256];
-    let sizes = generate_sizes(30 as usize);
+    let sizes = generate_sizes(1025 as usize);
 
     for n in sizes {
         let m1 = generate_nxn_matrix(n);
