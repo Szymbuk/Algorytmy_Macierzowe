@@ -60,6 +60,8 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>,
     let s32 = &a32 - &x31_a12;
     let s33 = &a33 - &x31_a13;
 
+    multiplier.counter.increment_additions(m_size * m_size * 4);
+
     // --- KROK 4: Dopełnienie Schura poziomu 2 (redukcja S22) ---
     let s22_inv = recursive_matrix_inversion_9block(&s22, multiplier.counter, m_algo)?;
 
@@ -70,7 +72,7 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>,
     let s33_prime = &s33 - &z32_s23;
 
     let s33_prime_inv = recursive_matrix_inversion_9block(&s33_prime, multiplier.counter, m_algo)?;
-
+    multiplier.counter.increment_additions(one_third * one_third);
     // --- KROK 5: Precyzyjna rekonstrukcja 9 bloków macierzy odwrotnej ---
     let b33 = s33_prime_inv;
 
@@ -111,6 +113,8 @@ pub fn recursive_matrix_inversion_9block<C: OperationCounter>(a: &Array2<f64>,
     let y13_b31 = multiplier.multiply(&y13, &b31);
     let b11 = &m1 - &(&y12_b21 + &y13_b31);
 
+    multiplier.counter.increment_additions(one_third * one_third * 7);
+    multiplier.counter.increment_multiplications(one_third * one_third * 5);
     // --- KROK 6: Złożenie macierzy wynikowej ---
     let mut c_work = Array2::zeros((actual_n, actual_n));
 

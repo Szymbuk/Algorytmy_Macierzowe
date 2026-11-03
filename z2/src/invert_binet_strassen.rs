@@ -57,6 +57,9 @@ pub fn recursive_matrix_inversion(a: &Array2<f64>,
             c_work.slice_mut(s![0..mid, mid..actual_n]).assign(&b12);
             c_work.slice_mut(s![mid..actual_n, 0..mid]).assign(&b21);
             c_work.slice_mut(s![mid..actual_n, mid..actual_n]).assign(&b22);
+
+            multiplier.counter.increment_additions(mid * mid * 3); // 2 dodawania/odejmowania macierzy + 1 dodawanie macierzy I
+            multiplier.counter.increment_multiplications(mid * mid * 2); // 2 zmiany znaku (* -1.0) dla b12 i b21
         }
 
         MatrixType::Lower => {
@@ -77,6 +80,8 @@ pub fn recursive_matrix_inversion(a: &Array2<f64>,
             // Górny prawy blok (pomiędzy 0..mid a mid..actual_n) pozostaje zerowy (zainicjalizowany jako 0)
             c_work.slice_mut(s![mid..actual_n, 0..mid]).assign(&b21);
             c_work.slice_mut(s![mid..actual_n, mid..actual_n]).assign(&a22_inv);
+            
+            multiplier.counter.increment_multiplications(mid * mid); // 1 zmiana znaku (* -1.0) dla b21
         }
 
         MatrixType::Upper => {
@@ -97,6 +102,8 @@ pub fn recursive_matrix_inversion(a: &Array2<f64>,
             c_work.slice_mut(s![0..mid, mid..actual_n]).assign(&b12);
             // Dolny lewy blok pozostaje zerowy
             c_work.slice_mut(s![mid..actual_n, mid..actual_n]).assign(&a22_inv);
+
+            multiplier.counter.increment_multiplications(mid * mid); // 1 zmiana znaku (* -1.0) dla b12
         }
     }
 

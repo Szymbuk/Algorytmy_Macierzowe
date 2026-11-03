@@ -48,6 +48,8 @@ pub fn recursive_lu<C : OperationCounter>(a: &Array2<f64>, counter: &mut C, m_al
     let l21_u12 = multiplier.multiply(&l21, &u12);
     let a22_schur = &a22 - &l21_u12;
 
+    multiplier.counter.increment_additions(mid * mid);
+
     // 5. Rekurencyjna faktoryzacja LU dopełnienia Schura: A22' = L22 * U22
     let (l22, u22) = recursive_lu(&a22_schur, multiplier.counter, m_algo)?;
 
