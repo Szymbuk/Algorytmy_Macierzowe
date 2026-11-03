@@ -6,7 +6,7 @@ pub use rand::prelude::*;
 pub mod multiplication_algorithms;
 pub mod csv_io;
 pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication,dot_product,make_even};
-
+pub use csv::Writer;
 
 
 pub fn generate_nxn_matrix(n: usize) -> Array2<f64> {
