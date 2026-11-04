@@ -7,6 +7,8 @@ pub mod multiplication_algorithms;
 pub mod csv_io;
 pub use crate::multiplication_algorithms::{binet_multiplication, strassen_multiplication,laderman_multiplication,dot_product,make_even};
 pub use csv::Writer;
+pub use crate::csv_io::{save_matrix_to_csv, load_matrix_from_csv};
+
 
 
 pub fn generate_nxn_matrix(n: usize) -> Array2<f64> {

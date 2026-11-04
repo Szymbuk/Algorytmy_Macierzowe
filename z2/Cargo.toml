@@ -4,8 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [[example]]
-name = "precision_comparison"
-path = "src/precision_comparison/precision_comparison.rs"
+name = "precision_comparison_inversion"
+path = "src/precision_comparison/precision_comparison_inversion.rs"
+
+[[example]]
+name = "precision_comparison_lu"
+path = "src/precision_comparison/precision_comparison_lu.rs"
 
 [[example]]
 name = "operation_comparison"
@@ -20,3 +24,4 @@ path = "src/time_complexity_calculator.rs"
 z1 = { path = "../z1" }
 ndarray =  {workspace = true}
 ndarray-linalg = { workspace = true}
+lax = { workspace = true }
