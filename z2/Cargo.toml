@@ -24,4 +24,3 @@ path = "src/time_complexity_calculator.rs"
 z1 = { path = "../z1" }
 ndarray =  {workspace = true}
 ndarray-linalg = { workspace = true}
-lax = { workspace = true }
