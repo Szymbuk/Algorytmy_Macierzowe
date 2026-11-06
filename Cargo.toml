@@ -5,6 +5,7 @@ members = ["benchmarks",
     "z3",
     "z4",
 ]
+resolver = "3"
 
 
 [workspace.dependencies]
@@ -17,3 +18,5 @@ assert_float_eq = "1.2.0"
 csv = "1.4.0"
 ndarray-csv = "0.5.4"
 serde = { version = "1.0.229", features = ["derive"] }
+ndarray-linalg = { version = "0.18.1", features = ["openblas-static"] } 
+openblas-src = { version = "0.10", features = ["native-tls"] }
